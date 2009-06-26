@@ -1,3 +1,6 @@
+# this is improved version of animatedsprite which can be found here:
+# http://swiftcoder.wordpress.com/2009/04/17/enhanced-animation-code-for-pyglet/
+
 import pyglet
 
 class AnimatedSprite(pyglet.sprite.Sprite):
@@ -14,7 +17,11 @@ class AnimatedSprite(pyglet.sprite.Sprite):
         pyglet.sprite.Sprite.__init__(self, img, x, y, blend_src, blend_dest, batch, group, usage)
 
         self._paused = False
-        self._range = (0, 1)        
+        self._range = (0, 1)
+
+        # frame lookup table
+        self._frame_lookup = [ range(0, len(self._animation.frames)) ]
+        self._current_lookup_index = 0
 
     def _animate(self, dt):
         self._frame_index += 1
@@ -22,7 +29,8 @@ class AnimatedSprite(pyglet.sprite.Sprite):
             self._frame_index = self.range[0]
             self.dispatch_event('on_animation_end')
 
-        frame = self._animation.frames[self._frame_index]
+        # use frame lookup table
+        frame = self._animation.frames[ self._frame_lookup[self._current_lookup_index][self._frame_index]]
         self._set_texture(frame.image.get_texture())
 
         if frame.duration != None:
@@ -64,3 +72,11 @@ class AnimatedSprite(pyglet.sprite.Sprite):
             self._animate(frame.duration)
             self._paused = False
 
+    def set_active_lookup(self, index):
+        if index >= 0 or index < len(self._frame_lookup):
+            self._current_lookup_index = index
+            self._frame_index = 0
+
+    def add_lookup(self, list):
+        self._frame_lookup.append(list)
+        self.set_loop(0, len(list))
